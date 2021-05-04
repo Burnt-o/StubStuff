@@ -175,7 +175,7 @@ namespace StubStuff
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
-
+            Console.WriteLine("Window loaded!");
 
 
 
@@ -244,7 +244,7 @@ namespace StubStuff
             //if we want to use a very short period on this (eg 30ms), it's possible to run into issues like our ui locking up. DistpacherTimer runs on the same thread as wpf ui stuff, so our mainloop needs to finish processing relatively quickly so we can handle mouse inputs and etc.
             //if we wanted to avoid this we could use System.Threading.Timer or System.Timers.Timer, but then we'd have to worry about multithreading issues which is a PITA I can't be bothered about
             DispatcherTimer dtClockTime = new DispatcherTimer();
-            dtClockTime.Interval = new TimeSpan(0, 0, 1); //in Hour, Minutes, Second.
+            dtClockTime.Interval = new TimeSpan(0, 0, 0, 0, 30); //in days, Hours, Minutes, Second, milliseconds.
             dtClockTime.Tick += mainloop;
             dtClockTime.Start();
 
@@ -324,13 +324,17 @@ namespace StubStuff
 
 
              IntPtr processHandle;
-            Process myProcess;
+            Process myProcess = null;
 
 
                 //if we've previously attached to mcc, check if the processID is still valid (eg process is still running at that id)
                 try
                 {
                     myProcess = Process.GetProcessById(GlobalVars.ProcessID.GetValueOrDefault()); //this will throw an exception if no process exists at that id
+                if (myProcess.Id == 0)
+                {
+                    myProcess = null;
+                }
                 }
                 catch 
                 {
@@ -354,7 +358,7 @@ namespace StubStuff
                         GlobalVars.ProcessID = myProcess.Id;
                         GlobalVars.GlobalProcessHandle = processHandle;
                         Console.WriteLine("MCC found with ID " + (Convert.ToString(myProcess.Id, 16)).ToUpper());
-                        GlobalVars.WinStoreFlag = processname.Contains("Win"); //Win as in Winstore
+                        GlobalVars.WinStoreFlag = processname.Contains("Store"); //as in Winstore
                         return true;
                     }
                     catch
@@ -430,7 +434,7 @@ namespace StubStuff
                         client.DefaultRequestHeaders.Add("User-Agent",
                             "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");
 
-                        using (var response = client.GetAsync("https://api.github.com/repos/Burnt-o/HaloCheckpointManager/commits?path=WpfApp3/offsets/" + GlobalVars.MCCversion + ".json").Result)
+                        using (var response = client.GetAsync("https://api.github.com/repos/Burnt-o/StubbStuff/commits?path=StubStuff/offsets/" + GlobalVars.MCCversion + ".json").Result)
                         {
                             var json = response.Content.ReadAsStringAsync().Result;
 
@@ -474,7 +478,7 @@ namespace StubStuff
                     //here's the fun
                     try
                     {
-                        String url = "https://raw.githubusercontent.com/Burnt-o/HaloCheckpointManager/master/WpfApp3/offsets/" + GlobalVars.MCCversion + ".json";
+                        String url = "https://raw.githubusercontent.com/Burnt-o/StubStuff/master/StubStuff/offsets/" + GlobalVars.MCCversion + ".json";
                         System.Net.WebClient client = new System.Net.WebClient();
                         String json = client.DownloadString(url);
                         System.IO.File.WriteAllText("offsets\\" + GlobalVars.MCCversion + ".json", json);
@@ -657,6 +661,7 @@ namespace StubStuff
                             break;
 
                     }
+                    Console.WriteLine("gameindicator is: " + buffer[0]);
                 }
                 else //means reading the gameindicatormagic failed
                 {
@@ -818,7 +823,9 @@ namespace StubStuff
 
                 }
 
-
+                //let's set these ui values for funsies
+                gametext.Text = "Game: " + GlobalVars.AttachedGame;
+                leveltext.Text = "Levelcode: " + GlobalVars.AttachedLevel;
 
             }
 
